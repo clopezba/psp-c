@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #include <unistd.h> //para fork
 #include <sys/types.h> //para pid_t
 #include<sys/wait.h> //para el wait
@@ -8,14 +7,6 @@
 
 //declaramos los manejadores de la señal 
 //los dos están disponibles tanto para padre como para hijos porque se han creado antes del fork
-=======
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <signal.h>
-
-//definimos el manejador de la señal
->>>>>>> f77cf9fa721cb6c36c8956a44db0b9cc4fb00907
 void manejadorHijo(int num_senyal);
 void manejadorPadre(int num_senyal);
 
