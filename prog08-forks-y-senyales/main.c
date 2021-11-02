@@ -1,6 +1,6 @@
 #include <unistd.h> //para fork
 #include <sys/types.h> //para pid_t
-#include<sys/wait.h> //para el wait
+#include <sys/wait.h> //para el wait
 #include <signal.h> //para señales
 #include <stdio.h> //para printf
 #include <stdlib.h> // para exit
