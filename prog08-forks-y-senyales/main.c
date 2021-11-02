@@ -23,7 +23,7 @@ int main(int argc, char const *argv[])
         printf("[Proceso: %d]: Manejador activado.\n", getpid());
         pause();
     }else{ //soy el padre
-        signal(SIGUSR1, manejadorPadre);
+        signal(SIGUSR1, manejadorPadre); //el tratamiento de la señal SIGUSR1 se hará con el manejador padre
         printf("[Proceso: %d]: Manejador activado.\n", getpid());
         pause();
         pid_t pid_hijo = wait(NULL);
