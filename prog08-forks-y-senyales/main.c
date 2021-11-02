@@ -12,7 +12,6 @@ void manejadorPadre(int num_senyal);
 
 int main(int argc, char const *argv[])
 {
-<<<<<<< HEAD
     pid_t pid;
     pid = fork();
     if (pid == -1){ //gestionamos un posible error
@@ -29,13 +28,10 @@ int main(int argc, char const *argv[])
         pause();
         pid_t pid_hijo = wait(NULL);
     }
-=======
->>>>>>> f77cf9fa721cb6c36c8956a44db0b9cc4fb00907
     
     return 0;
 }
 
-<<<<<<< HEAD
 //implementamos los manejadores
 void manejadorHijo(int num_senyal){
     printf("Soy el manejador de la señal del hijo");
@@ -44,11 +40,3 @@ void manejadorHijo(int num_senyal){
 void manejadorPadre(int num_senyal){
     printf("Soy el manejador de la señal del padre");
 }
-=======
-void manejadorHijo(int num_senyal){
-
-}
-void manejadorPadre(int num_senyal){
-    
-};
->>>>>>> f77cf9fa721cb6c36c8956a44db0b9cc4fb00907
