@@ -45,7 +45,6 @@ int main()
     char *myfifo = "/tmp/myfifo";
     mkfifo(myfifo, 0666);
 
-    char str1[80], str2[80];
     fd1 = open(myfifo, O_RDONLY);
 
     consumidor = fork();
@@ -56,7 +55,7 @@ int main()
     }
 
     if (consumidor == 0)
-    {
+    {                 //Proceso consumidor. Sólo leerá del pipe así que...
         unsigned int monedas_necesarias = int_aleatorio(5, 15);
         printf("[Consumidor]: Se precisan %u monedas.\n", monedas_necesarias);
         unsigned int monedas_disponibles = 0, monedas_recibidas;
@@ -73,32 +72,35 @@ int main()
             printf("[Consumidor]: Recibidas %u monedas del productor, ya tengo %u en total.\n", monedas_recibidas, monedas_disponibles);
         }
         //ya no voy a leer más.
-        close(fd1);
+        close(myfifo);
         printf("[Consumidor]: Ya puedo construir, la construcción tardará 5 segundos.\n");
         sleep(5);
         printf("[Consumidor]: Construcción finalizada, notificando al padre.\n");
         kill(getppid(), SIGUSR2); //desbloqueo al padre
-        //final del código del consumidor
+        //final del código del consumidor.
     }
     else
-    {
-        execlp("./productor.exe", "./productor.exe", consumidor, NULL);
-        // Código del padre, me quedo esperando la señal inicial:
-        pause();
-        while (!final)
-        {
-            //Si he recibido una señal y no se ha acabado la construcción, es que tengo que notificar al prodcutor
-            kill(productor, SIGUSR1);
-            printf("[Padre]: Esperando una señal...\n");
-            pause(); //me quedo esperando la siguiente señal.
+    {// Código del padre, me quedo esperando la señal inicial:
+            execlp("./productor.exe", "./productor.exe", consumidor, NULL);
+            pid_t productor
+            if(getpid()!= 0 & getpid()!=consumidor){
+                productor = getpid();
+            }
+            pause();
+            while (!final)
+            {
+                //Si he recibido una señal y no se ha acabado la construcción, es que tengo que notificar al prodcutor
+                kill(productor, SIGUSR1);
+                printf("[Padre]: Esperando una señal...\n");
+                pause(); //me quedo esperando la siguiente señal.
+            }
+            //el consumidor ha terminado, lo espero.
+            wait(NULL);
+            //enviando la señal de finali al productor para que se desbloquee actualizando su valor de final.
+            kill(productor, SIGUSR2);
+            //esperando al productor
+            wait(NULL);
         }
-        //el consumidor ha terminado, lo espero.
-        wait(NULL);
-        //enviando señal de finali al productor para que se desbloquee actualizando su valor de final.
-        kill(productor, SIGUSR2);
-        //esperando al productor
-        wait(NULL);
-    }
 }
 
 //preguntas: En este caso. ¿Importa el orden de creación de los hijos?¿Por qué sí o por qué no?

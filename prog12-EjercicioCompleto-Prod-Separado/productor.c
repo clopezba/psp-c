@@ -24,10 +24,15 @@ void gestor_senyal(int senyal)
     }
 }
 
+
+//implementar el main.
+//en este caso, el main recibirá como parámetro
+//el pid del consumidor 
+//el parámetro estará en argv[1]
 int main(int argc, char const *argv[])
 {
     pid_t productor;
-
+    pid_t consumidor = atol(argv[1]);
     signal(SIGUSR1, gestor_senyal); //registramos el tratamiento de SIGUSR1
     signal(SIGUSR2, gestor_senyal); //registramos el tratamiento de SIGUSR2
 
@@ -35,7 +40,6 @@ int main(int argc, char const *argv[])
     char *myfifo = "/tmp/myfifo";
     mkfifo(myfifo, 0666);
 
-    char str1[80], str2[80];
     fd1 = open(myfifo, O_WRONLY);
     
     unsigned int monedas_producidas = 0;
@@ -51,7 +55,7 @@ int main(int argc, char const *argv[])
         //escribo las monedas en el pipe
         write(fd1, &monedas_producidas, sizeof(unsigned int));
         //notifico al consumidor que hay monedas disponibles para leer
-        kill(argv[1], SIGUSR1);
+        kill(consumidor, SIGUSR1);
         printf("[Productor]: Consumidor notificado. Esperando señal para continuar...\n");
         pause();
     }
