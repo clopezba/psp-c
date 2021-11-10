@@ -72,7 +72,7 @@ int main()
     else
     { // Código del padre, me quedo esperando la señal inicial:
         char buffer[6];
-        sprintf(buffer, "%d", getpid());
+        sprintf(buffer, "%d", consumidor);
         if (execlp("./productor.exe", "./productor.exe", buffer, NULL) == -1)
         {
             perror("Error al lanzar programa");
