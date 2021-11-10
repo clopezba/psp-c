@@ -14,15 +14,6 @@
 #define MIN 1
 #define MAX 5
 
-//creamos una variable global que guarde la condicion de finalización.
-//tiene que ser global porque la vamos a modificar desde las funciones de
-//tratamiento de las señales y las funciones no pueden acceder a las variables
-//locales del main, ni tienen un valor de retorno, ni se les puede pasar
-//un parámetro de entrada salida.
-
-//aunque sea global, al hacer un fork se duplicará igualmente, es decir
-//no se compartirá el valor entre el padre y los hijos, por eso todos los que
-//sean notificados para finalizar tendrán que gestionar su notificación
 bool final = false;
 
 void gestor_senyal(int senyal)
@@ -31,7 +22,6 @@ void gestor_senyal(int senyal)
     { //La señal 2 la usaremos para finalizar.
         final = true;
     }
-    //cualquier otra señal que hayamos asociado a la función, no hará nada.
 }
 
 int main()
@@ -41,11 +31,11 @@ int main()
     signal(SIGUSR1, gestor_senyal); //registramos el tratamiento de SIGUSR1
     signal(SIGUSR2, gestor_senyal); //registramos el tratamiento de SIGUSR2
 
-    int static fd1;
+    int fd;
     char *myfifo = "/tmp/myfifo";
     mkfifo(myfifo, 0666);
 
-    fd1 = open(myfifo, O_RDONLY);
+    fd = open(myfifo, O_RDONLY);
 
     consumidor = fork();
     if (consumidor == -1)
@@ -55,7 +45,7 @@ int main()
     }
 
     if (consumidor == 0)
-    {                 //Proceso consumidor. Sólo leerá del pipe así que...
+    { //Proceso consumidor. Sólo leerá del pipe así que...
         unsigned int monedas_necesarias = int_aleatorio(5, 15);
         printf("[Consumidor]: Se precisan %u monedas.\n", monedas_necesarias);
         unsigned int monedas_disponibles = 0, monedas_recibidas;
@@ -67,12 +57,12 @@ int main()
             printf("[Consumidor]: Esperando una señal antes de leer.\n");
             pause();
             //leo las monedas y las añado a las monedas disponibles
-            read(fd1, &monedas_recibidas, sizeof(unsigned int));
+            read(fd, &monedas_recibidas, sizeof(unsigned int));
             monedas_disponibles += monedas_recibidas; //añado las recibidas a las que ya tenía.
             printf("[Consumidor]: Recibidas %u monedas del productor, ya tengo %u en total.\n", monedas_recibidas, monedas_disponibles);
         }
         //ya no voy a leer más.
-        close(myfifo);
+        close(fd);
         printf("[Consumidor]: Ya puedo construir, la construcción tardará 5 segundos.\n");
         sleep(5);
         printf("[Consumidor]: Construcción finalizada, notificando al padre.\n");
@@ -80,27 +70,42 @@ int main()
         //final del código del consumidor.
     }
     else
-    {// Código del padre, me quedo esperando la señal inicial:
-            execlp("./productor.exe", "./productor.exe", consumidor, NULL);
-            pid_t productor
-            if(getpid()!= 0 & getpid()!=consumidor){
-                productor = getpid();
-            }
-            pause();
-            while (!final)
-            {
-                //Si he recibido una señal y no se ha acabado la construcción, es que tengo que notificar al prodcutor
-                kill(productor, SIGUSR1);
-                printf("[Padre]: Esperando una señal...\n");
-                pause(); //me quedo esperando la siguiente señal.
-            }
-            //el consumidor ha terminado, lo espero.
-            wait(NULL);
-            //enviando la señal de finali al productor para que se desbloquee actualizando su valor de final.
-            kill(productor, SIGUSR2);
-            //esperando al productor
-            wait(NULL);
+    { // Código del padre, me quedo esperando la señal inicial:
+        char buffer[6];
+        sprintf(buffer, "%d", getpid());
+        if (execlp("./productor.exe", "./productor.exe", buffer, NULL) == -1)
+        {
+            perror("Error al lanzar programa");
         }
+
+        FILE *fichero = NULL;
+        char aux[6];
+
+        fichero = popen("/bin/pgrep productor", "r");
+        if (fichero == NULL)
+        {
+            perror("No se puede abrir fichero");
+            exit(-1);
+        }
+        char *pidProd = fgets(aux, 6, fichero);
+        pid_t productor = atoi(pidProd);
+        pclose(fichero);
+
+        pause();
+        while (!final)
+        {
+            //Si he recibido una señal y no se ha acabado la construcción, es que tengo que notificar al prodcutor
+            kill(productor, SIGUSR1);
+            printf("[Padre]: Esperando una señal...\n");
+            pause(); //me quedo esperando la siguiente señal.
+        }
+        //el consumidor ha terminado, lo espero.
+        wait(NULL);
+        //enviando la señal de finali al productor para que se desbloquee actualizando su valor de final.
+        kill(productor, SIGUSR2);
+        //esperando al productor
+        wait(NULL);
+    }
 }
 
 //preguntas: En este caso. ¿Importa el orden de creación de los hijos?¿Por qué sí o por qué no?

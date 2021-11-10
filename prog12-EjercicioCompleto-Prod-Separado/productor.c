@@ -24,19 +24,14 @@ void gestor_senyal(int senyal)
     }
 }
 
-
-//implementar el main.
-//en este caso, el main recibirá como parámetro
-//el pid del consumidor 
-//el parámetro estará en argv[1]
 int main(int argc, char const *argv[])
 {
-    pid_t productor;
-    pid_t consumidor = atol(argv[1]);
+    
+    pid_t consumidor = atoi(argv[1]);
     signal(SIGUSR1, gestor_senyal); //registramos el tratamiento de SIGUSR1
     signal(SIGUSR2, gestor_senyal); //registramos el tratamiento de SIGUSR2
 
-    int static fd1;
+    int fd1;
     char *myfifo = "/tmp/myfifo";
     mkfifo(myfifo, 0666);
 
