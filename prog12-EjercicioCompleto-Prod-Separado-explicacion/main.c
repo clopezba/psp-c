@@ -11,7 +11,6 @@
 
 #include "./funciones.h"
 
-
 bool final = false;
 
 void gestor_senyal(int senyal)
@@ -43,23 +42,24 @@ int main()
         unsigned int monedas_necesarias = int_aleatorio(5, 15);
         printf("[Consumidor]: Se precisan %u monedas.\n", monedas_necesarias);
         unsigned int monedas_disponibles = 0, monedas_recibidas;
-        
+
         while (monedas_disponibles < monedas_necesarias)
         {
             printf("[Consumidor]: No tengo monedas suficientes. Notificando la situación al padre.\n");
             sleep(1);
+
             kill(getppid(), SIGUSR1); //Notificamos al padre que necesito monedas.
+            fd = open(myfifo, O_RDONLY | O_NONBLOCK);
             printf("[Consumidor]: Esperando una señal antes de leer.\n");
             pause();
-            fd = open(myfifo, O_RDONLY | O_NONBLOCK);
+
             //leo las monedas y las añado a las monedas disponibles
             read(fd, &monedas_recibidas, sizeof(unsigned int));
-            printf("Monedas recibidas:%d\n", monedas_recibidas);
             monedas_disponibles += monedas_recibidas; //añado las recibidas a las que ya tenía.
+            close(fd);
             printf("[Consumidor]: Recibidas %u monedas del productor, ya tengo %u en total.\n", monedas_recibidas, monedas_disponibles);
         }
-        //ya no voy a leer más.
-        close(fd);
+
         printf("[Consumidor]: Ya puedo construir, la construcción tardará 5 segundos.\n");
         sleep(5);
         printf("[Consumidor]: Construcción finalizada, notificando al padre.\n");
@@ -69,8 +69,8 @@ int main()
     else
     { // Código del padre, me quedo esperando la señal inicial:
         char buffer[6];
-        printf("[Padre]: Mi pid es %d, el pid del consumidor es %d.\n", getpid(), consumidor);
         sprintf(buffer, "%d", consumidor);
+        
         pid_t productor = fork();
         if (productor == 0)
         {
@@ -79,21 +79,7 @@ int main()
                 perror("Error al lanzar programa");
             }
         }
-        /*
-        FILE *fichero = NULL;
-        char aux[6];
 
-        fichero = popen("/bin/pgrep productor", "r");
-        if (fichero == NULL)
-        {
-            perror("No se puede abrir fichero");
-            exit(-1);
-        }
-        char *pidProd = fgets(aux, 6, fichero);
-        pid_t productor = atoi(pidProd);
-        
-        pclose(fichero);
-        */
         else
         {
             pause();
@@ -113,5 +99,3 @@ int main()
         }
     }
 }
-
-//preguntas: En este caso. ¿Importa el orden de creación de los hijos?¿Por qué sí o por qué no?
